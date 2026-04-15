@@ -10,13 +10,16 @@ import {
   resetPasswordSchema,
 } from "./auth.schema";
 import logger from "../../config/logger";
+import { authAttemptsTotal } from "../../config/metrics";
 
 export async function signup(req: Request, res: Response) {
   try {
     const data = signupSchema.parse(req.body);
     const result = await authService.signup(data.name, data.email, data.password);
+    authAttemptsTotal.inc({ action: "signup", result: "success" });
     return sendSuccess(res, result, "Signup successful. Check email for OTP.", 201);
   } catch (err: any) {
+    authAttemptsTotal.inc({ action: "signup", result: "failure" });
     logger.warn(`Signup failed: ${err.message}`);
     return sendError(res, err.message, 400);
   }
@@ -26,8 +29,10 @@ export async function login(req: Request, res: Response) {
   try {
     const data = loginSchema.parse(req.body);
     const result = await authService.login(data.email, data.password);
+    authAttemptsTotal.inc({ action: "login", result: "success" });
     return sendSuccess(res, result, "Login successful");
   } catch (err: any) {
+    authAttemptsTotal.inc({ action: "login", result: "failure" });
     logger.warn(`Login failed: ${err.message}`);
     return sendError(res, err.message, 401);
   }

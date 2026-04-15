@@ -12,13 +12,18 @@
     "db:push": "bunx prisma db push",
     "db:studio": "bunx prisma studio",
     "db:seed": "bun prisma/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release": "bash release.sh backend patch",
     "release:minor": "bash release.sh backend minor",
     "release:major": "bash release.sh backend major"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^25.6.0"
+    "@types/node": "^25.6.0",
+    "@types/supertest": "^7.2.0",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.4"
   },
   "peerDependencies": {
     "typescript": "^6.0.2"
@@ -42,6 +47,7 @@
     "nodemailer": "^8.0.5",
     "pg": "^8.20.0",
     "prisma": "^7.7.0",
+    "prom-client": "^15.1.3",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
   }

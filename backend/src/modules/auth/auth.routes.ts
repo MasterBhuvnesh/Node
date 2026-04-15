@@ -1,22 +1,29 @@
 import { Router } from "express";
+import type { RequestHandler } from "express";
 import rateLimit from "express-rate-limit";
 import * as authController from "./auth.controller";
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
-  message: { success: false, message: "Too many attempts, try again later" },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const isTest = process.env.NODE_ENV === "test";
 
-const otpLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: { success: false, message: "Too many OTP attempts, try again later" },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const authLimiter: RequestHandler = isTest
+  ? (_req, _res, next) => next()
+  : rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 10,
+      message: { success: false, message: "Too many attempts, try again later" },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
+
+const otpLimiter: RequestHandler = isTest
+  ? (_req, _res, next) => next()
+  : rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 5,
+      message: { success: false, message: "Too many OTP attempts, try again later" },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
 
 const router = Router();
 

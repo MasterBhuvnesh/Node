@@ -50,6 +50,12 @@ bun run start
 
 # Type-check the project (no output = no errors)
 bunx tsc --noEmit
+
+# Run tests (requires PostgreSQL running)
+bun run test
+
+# Run tests in watch mode
+bun run test:watch
 ```
 
 ---
@@ -167,6 +173,25 @@ docker logs -f node_backend  # follow mode
 > - `.env` — for `bun run dev`, uses `localhost:5433`
 > - `.env.docker` — for local Docker, uses `node_postgres:5432`
 > - `.env.prod` — for production, real secrets + registry image URL
+
+---
+
+## Monitoring (Prometheus + Grafana)
+
+Included in `docker-compose.local.yml`. When you run the local stack, these are available:
+
+| Service    | URL                        | Credentials   |
+|------------|----------------------------|---------------|
+| Prometheus | http://localhost:9090       | —             |
+| Grafana    | http://localhost:3001       | admin / admin |
+| Metrics    | http://localhost:3000/metrics | —           |
+
+Grafana comes pre-configured with Prometheus as a data source and a "Node Backend" dashboard with:
+- Request rate by method and route
+- Response time percentiles (p50/p95/p99)
+- Error rate (4xx/5xx)
+- Auth attempts (success/failure)
+- Active requests, memory usage, event loop lag, CPU
 
 ---
 
