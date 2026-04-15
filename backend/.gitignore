@@ -10,8 +10,8 @@ dist
 coverage
 *.lcov
 
-# logs
-logs
+# logs (winston output)
+/logs
 _.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 

@@ -18,12 +18,13 @@ export async function createGroup(req: Request, res: Response) {
 export async function getUserGroups(req: Request, res: Response) {
   try {
     const cursor = (req.query.cursor as string) || undefined;
-    const take = req.query.take ? parseInt(String(req.query.take), 10) : 20;
+    const raw = parseInt(String(req.query.take), 10);
+    const take = Number.isNaN(raw) ? 20 : Math.max(1, Math.min(raw, 100));
     const result = await groupService.getUserGroups(req.userId!, cursor, take);
     return sendSuccess(res, result);
   } catch (err: any) {
     logger.error(`Get groups failed: ${err.message}`);
-    return sendError(res, err.message);
+    return sendError(res, err.message, 400);
   }
 }
 

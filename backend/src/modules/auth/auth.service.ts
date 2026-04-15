@@ -119,14 +119,13 @@ export async function resetPassword(email: string, code: string, newPassword: st
   if (!otp) throw new Error("Invalid or expired OTP");
 
   const hashed = await hashPassword(newPassword);
-  await prisma.user.update({ where: { email }, data: { password: hashed } });
-  await prisma.oTP.deleteMany({ where: { email, type: "password_reset" } });
 
-  // Invalidate all refresh tokens on password reset
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (user) {
-    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
-  }
+  // Atomic: update password + delete OTPs + invalidate all refresh tokens
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.update({ where: { email }, data: { password: hashed } });
+    await tx.oTP.deleteMany({ where: { email, type: "password_reset" } });
+    await tx.refreshToken.deleteMany({ where: { userId: user.id } });
+  });
 
   return { message: "Password reset successful" };
 }

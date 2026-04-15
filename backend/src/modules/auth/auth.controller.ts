@@ -83,6 +83,7 @@ export async function logout(req: Request, res: Response) {
     const result = await authService.logout(data.refreshToken);
     return sendSuccess(res, result, "Logged out");
   } catch (err: any) {
+    logger.warn(`Logout failed: ${err.message}`);
     return sendError(res, err.message, 400);
   }
 }

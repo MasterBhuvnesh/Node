@@ -3,7 +3,8 @@ dist
 .env
 .env.local
 *.log
-logs/
+/logs/
+backend/logs/
 .DS_Store
 .cache
 *.tsbuildinfo

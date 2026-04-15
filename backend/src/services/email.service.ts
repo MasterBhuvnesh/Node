@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
   secure: false,
   auth: {
     user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
+    pass: env.SMTP_PASSWORD,
   },
 });
 
@@ -18,7 +18,7 @@ export async function sendOTPEmail(to: string, code: string, type: "verification
 
   try {
     await transporter.sendMail({
-      from: env.SMTP_USER,
+      from: env.EMAIL_FROM,
       to,
       subject,
       text,
@@ -26,7 +26,6 @@ export async function sendOTPEmail(to: string, code: string, type: "verification
     logger.info(`OTP email sent to ${to}`);
   } catch (error) {
     logger.error(`Failed to send OTP email to ${to}`, { error });
-    // Don't throw — email failure shouldn't block auth flow in dev
-    if (env.NODE_ENV === "production") throw error;
+    throw error;
   }
 }

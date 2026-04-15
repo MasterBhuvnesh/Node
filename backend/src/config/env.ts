@@ -9,10 +9,12 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string(),
   SMTP_HOST: z.string().default("smtp.gmail.com"),
   SMTP_PORT: z.coerce.number().default(587),
-  SMTP_USER: z.string().default(""),
-  SMTP_PASS: z.string().default(""),
+  SMTP_USER: z.string(),
+  SMTP_PASSWORD: z.string(),
+  EMAIL_FROM: z.string(),
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+  CORS_ORIGIN: z.string().default("http://localhost:3001"),
 });
 
 export const env = envSchema.parse(process.env);
