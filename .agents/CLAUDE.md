@@ -8,8 +8,9 @@ This project is structured with a clear architectural separation and planning al
 - FRONTEND PLAN.md
 - MOBILE PLAN.md
 - SYSTEM FLOW.md
+- DESIGN.md
 
-These documents define the system design, architecture, workflows, and responsibilities across backend, frontend, and mobile applications.
+These documents define the system design, architecture, workflows, UI/UX direction, and responsibilities across backend, frontend, and mobile applications.
 
 ---
 
@@ -23,6 +24,7 @@ These documents define the system design, architecture, workflows, and responsib
      - Roles & permissions
      - API structure
      - App workflows
+     - UI/UX expectations (from DESIGN.md)
 
 ---
 
@@ -35,11 +37,13 @@ After reviewing:
   - Mobile app flow
   - Core features
   - Data models and relationships
+  - Design system and UI patterns
 
 - Identify:
   - Any inconsistencies
   - Missing components
   - Over-engineering or under-design
+  - UX issues or design conflicts
   - Potential scalability or security issues
 
 - If something feels unclear or wrong:
@@ -86,6 +90,17 @@ Focus on the following order:
 - NativeWind for styling
 - Zustand for state management
 
+### DESIGN ALIGNMENT (IMPORTANT)
+
+- Follow DESIGN.md strictly for:
+  - Layout patterns
+  - Spacing system
+  - Typography
+  - Component consistency
+
+- Do not introduce random UI patterns
+- Maintain consistency across all screens
+
 ---
 
 ## DEVELOPMENT PRACTICES
@@ -99,6 +114,7 @@ You are allowed to:
   - Group Agent
   - Logging Agent
   - Mobile API Agent
+  - UI Agent (based on DESIGN.md)
 
 Ensure:
 
@@ -165,7 +181,7 @@ Then:
 
 ## GOAL
 
-Build a **production-grade, scalable system** aligned with the provided architecture, not just a working prototype.
+Build a **production-grade, scalable system** aligned with the provided architecture and design system, not just a working prototype.
 
 ---
 
@@ -178,5 +194,6 @@ Think like:
 - A backend architect
 - A mobile engineer
 - A system designer
+- A product designer (respect DESIGN.md)
 
 Challenge decisions when necessary.

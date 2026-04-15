@@ -18,7 +18,7 @@ services:
       retries: 5
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/your-org/node-backend:latest}
+    image: ${BACKEND_IMAGE:-verma2904/node-backend:latest}
     container_name: node_backend
     restart: unless-stopped
     ports:
