@@ -17,8 +17,10 @@ All commands should be run from the `backend/` directory.
 # 1. Install dependencies
 bun install
 
-# 2. Copy environment file and fill in your values
+# 2. Copy environment files and fill in your values
 cp .env.example .env
+cp .env.example .env.docker
+# In .env.docker, change DATABASE_URL to use node_postgres:5432 and NODE_ENV to production
 
 # 3. Start PostgreSQL (Docker)
 docker compose up -d
@@ -106,16 +108,8 @@ docker build -t node-backend:latest .
 # Run the backend container (connects to the PostgreSQL container)
 docker run -d --name node-backend \
   --network backend_default \
+  --env-file .env.docker \
   -p 3000:3000 \
-  -e DATABASE_URL="postgresql://node_user:node_pass@node_postgres:5432/node_db" \
-  -e JWT_SECRET="your-secret" \
-  -e JWT_REFRESH_SECRET="your-refresh-secret" \
-  -e SMTP_HOST="smtp.gmail.com" \
-  -e SMTP_PORT="587" \
-  -e SMTP_USER="your-email" \
-  -e SMTP_PASSWORD="your-password" \
-  -e EMAIL_FROM="App <noreply@example.com>" \
-  -e NODE_ENV="production" \
   node-backend:latest
 
 # Check container status
@@ -132,9 +126,9 @@ docker logs -f node-backend  # follow mode
 docker stop node-backend && docker rm node-backend
 ```
 
-> When running the backend container alongside PostgreSQL, both must be
-> on the same Docker network (`backend_default`). The DATABASE_URL
-> should use the container name (`node_postgres`) instead of `localhost`.
+> **Why two `.env` files?**
+> - `.env` is for local development (`bun run dev`). It uses `localhost:5433` because your code runs on the host machine.
+> - `.env.docker` is for Docker. It uses `node_postgres:5432` because inside a container, `localhost` refers to the container itself — not your host. The container name (`node_postgres`) lets Docker route traffic to the PostgreSQL container over the shared network (`backend_default`).
 
 ---
 
