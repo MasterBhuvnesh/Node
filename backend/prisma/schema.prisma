@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  LEADER
+  MEMBER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   GroupMember[]
+  refreshTokens RefreshToken[]
+}
+
+model Group {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members GroupMember[]
+  logs    Log[]
+}
+
+model GroupMember {
+  id      String @id @default(uuid())
+  userId  String
+  groupId String
+  role    Role
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@index([userId])
+  @@index([groupId])
+}
+
+model Log {
+  id           String   @id @default(uuid())
+  groupId      String
+  action       String
+  message      String
+  performedBy  String
+  targetUserId String?
+  createdAt    DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@index([createdAt])
+}
+
+model OTP {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  type      String   @default("verification") // "verification" | "password_reset"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
