@@ -46,7 +46,7 @@ jobs:
 
       - name: Push schema to test database
         working-directory: ./backend
-        run: bunx prisma db push --skip-generate
+        run: bunx prisma db push
         env:
           DATABASE_URL: postgresql://node_user:node_pass@localhost:5432/node_db
 
