@@ -1,12 +1,10 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:16-alpine
     container_name: node_postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: ${DB_USER:-node_user}
       POSTGRES_PASSWORD: ${DB_PASS:-node_pass}

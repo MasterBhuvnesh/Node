@@ -78,13 +78,10 @@ export async function updateGroup(groupId: string, name: string, userId: string)
 
 /** Delete group (OWNER only) */
 export async function deleteGroup(groupId: string, userId: string) {
-  await createLog({
-    groupId,
-    action: "GROUP_DELETED",
-    message: "Group deleted",
-    performedBy: userId,
-  });
+  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  if (!group) throw new Error("Group not found");
 
+  // Logs cascade-delete with the group, so we just delete directly
   await prisma.group.delete({ where: { id: groupId } });
   return { message: "Group deleted" };
 }

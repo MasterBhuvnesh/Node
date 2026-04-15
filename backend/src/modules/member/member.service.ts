@@ -1,5 +1,5 @@
 import { prisma } from "../../config/db";
-import { Role } from "@prisma/client";
+import type { Role } from "@prisma/enums";
 import { createLog } from "../../services/log.service";
 
 /** Add a member to a group by email */

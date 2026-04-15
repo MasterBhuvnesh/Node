@@ -15,6 +15,9 @@ export async function signup(name: string, email: string, password: string) {
     data: { name, email, password: hashed },
   });
 
+  // Clean up any existing OTPs for this email
+  await prisma.oTP.deleteMany({ where: { email, type: "verification" } });
+
   const code = generateOTP();
   await prisma.oTP.create({
     data: { email, code, type: "verification", expiresAt: getOTPExpiry() },
@@ -95,10 +98,10 @@ export async function refreshAccessToken(token: string) {
   return { accessToken, refreshToken: newRefreshToken };
 }
 
-/** Send password reset OTP */
+/** Send password reset OTP (always returns success to prevent user enumeration) */
 export async function forgotPassword(email: string) {
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("User not found");
+  if (!user) return { message: "If the email exists, a reset OTP has been sent" };
 
   const code = generateOTP();
   await prisma.oTP.create({
@@ -107,7 +110,7 @@ export async function forgotPassword(email: string) {
 
   await sendOTPEmail(email, code, "password_reset");
 
-  return { message: "Reset OTP sent" };
+  return { message: "If the email exists, a reset OTP has been sent" };
 }
 
 /** Reset password using OTP */

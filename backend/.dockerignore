@@ -1,5 +1,32 @@
+# Dependencies (will be installed fresh inside the container)
 node_modules
+
+# Build artifacts
 dist
+
+# Environment files (secrets should be injected at runtime)
 .env
+.env.*
+
+# Logs
+logs
 *.log
+
+# Git
 .git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Docker (prevent recursive copy)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Docs
+docs
+*.md

@@ -14,7 +14,6 @@ const envSchema = z.object({
   EMAIL_FROM: z.string(),
   PORT: z.coerce.number().default(3000),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-  CORS_ORIGIN: z.string().default("http://localhost:3001"),
 });
 
 export const env = envSchema.parse(process.env);

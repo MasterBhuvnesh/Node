@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { prisma } from "../config/db";
 import { sendError } from "../utils/response";
-import type { Role } from "@prisma/client";
+import type { Role } from "@prisma/enums";
 
 /**
  * Authorize user based on their role within a group.
