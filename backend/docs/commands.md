@@ -176,22 +176,30 @@ docker logs -f node_backend  # follow mode
 
 ---
 
-## Monitoring (Prometheus + Grafana)
+## Monitoring (Prometheus + Grafana + Loki)
 
 Included in `docker-compose.local.yml`. When you run the local stack, these are available:
 
-| Service    | URL                        | Credentials   |
-|------------|----------------------------|---------------|
-| Prometheus | http://localhost:9090       | —             |
-| Grafana    | http://localhost:3001       | admin / admin |
-| Metrics    | http://localhost:3000/metrics | —           |
+| Service    | URL                          | Credentials   |
+|------------|------------------------------|---------------|
+| Prometheus | http://localhost:9090         | —             |
+| Grafana    | http://localhost:3001         | admin / admin |
+| Loki       | http://localhost:3100         | —             |
+| Metrics    | http://localhost:3000/metrics | —             |
 
-Grafana comes pre-configured with Prometheus as a data source and a "Node Backend" dashboard with:
+Grafana comes pre-configured with Prometheus + Loki datasources and a "Node Backend" dashboard:
+
+**Metrics (Prometheus):**
 - Request rate by method and route
 - Response time percentiles (p50/p95/p99)
 - Error rate (4xx/5xx)
 - Auth attempts (success/failure)
 - Active requests, memory usage, event loop lag, CPU
+
+**Logs (Loki):**
+- Application logs (all levels)
+- Error logs (filtered)
+- Log rate by level (info/warn/error)
 
 ---
 

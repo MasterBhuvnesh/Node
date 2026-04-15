@@ -25,9 +25,23 @@ services:
       - "3000:3000"
     env_file:
       - .env.docker
+    environment:
+      LOKI_URL: http://loki:3100
     depends_on:
       postgres:
         condition: service_healthy
+      loki:
+        condition: service_started
+
+  loki:
+    image: grafana/loki:latest
+    container_name: node_loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
 
   prometheus:
     image: prom/prometheus:latest
@@ -56,8 +70,10 @@ services:
       - grafana_data:/var/lib/grafana
     depends_on:
       - prometheus
+      - loki
 
 volumes:
   pgdata:
   prometheus_data:
   grafana_data:
+  loki_data:
