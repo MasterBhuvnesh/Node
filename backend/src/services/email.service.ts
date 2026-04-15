@@ -13,6 +13,11 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendOTPEmail(to: string, code: string, type: "verification" | "password_reset") {
+  if (env.NODE_ENV === "test") {
+    logger.info(`[TEST] Skipped OTP email to ${to} (code: ${code})`);
+    return;
+  }
+
   const subject = type === "verification" ? "Verify your account" : "Reset your password";
   const text = `Your OTP code is: ${code}. It expires in 10 minutes.`;
 
