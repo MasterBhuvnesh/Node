@@ -66,6 +66,9 @@ bun run db:generate
 
 # Open Prisma Studio (visual database browser)
 bun run db:studio
+
+# Seed the database with test data
+bun run db:seed
 ```
 
 > After editing `prisma/schema.prisma`, always run `db:push` (dev) or `db:migrate` (prod),
