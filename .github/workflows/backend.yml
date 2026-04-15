@@ -9,8 +9,68 @@ on:
     #   - "production"
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: node_user
+          POSTGRES_PASSWORD: node_pass
+          POSTGRES_DB: node_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U node_user -d node_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: bun install --frozen-lockfile
+
+      - name: Generate Prisma client
+        working-directory: ./backend
+        run: bunx prisma generate
+
+      - name: Push schema to test database
+        working-directory: ./backend
+        run: bunx prisma db push --skip-generate
+        env:
+          DATABASE_URL: postgresql://node_user:node_pass@localhost:5432/node_db
+
+      - name: Type check
+        working-directory: ./backend
+        run: bunx tsc --noEmit
+
+      - name: Run tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://node_user:node_pass@localhost:5432/node_db
+          JWT_SECRET: test-jwt-secret
+          JWT_REFRESH_SECRET: test-refresh-secret
+          SMTP_HOST: smtp.gmail.com
+          SMTP_PORT: "587"
+          SMTP_USER: test@test.com
+          SMTP_PASSWORD: testpass
+          EMAIL_FROM: "Test <test@test.com>"
+          NODE_ENV: test
+        run: bun run test
+
   build:
     runs-on: ubuntu-latest
+    needs: test
 
     steps:
       - name: Checkout code
