@@ -80,6 +80,8 @@ bun run db:seed
 
 ## Docker - PostgreSQL Only
 
+Uses the base `docker-compose.yml` — just PostgreSQL, for when you run the backend with `bun run dev`.
+
 ```bash
 # Start PostgreSQL container
 docker compose up -d
@@ -99,36 +101,72 @@ docker exec -it node_postgres psql -U node_user -d node_db
 
 ---
 
-## Docker - Full Application
+## Docker - Local (full stack)
+
+Uses `docker-compose.local.yml` — builds the backend from your Dockerfile and starts it alongside PostgreSQL. Reads env from `.env.docker`.
 
 ```bash
-# Build the backend image
-docker build -t node-backend:latest .
+# Start everything (builds backend image + starts PostgreSQL)
+docker compose -f docker-compose.local.yml up -d --build
 
-# Run the backend container (connects to the PostgreSQL container)
-docker run -d --name node-backend \
-  --network backend_default \
-  --env-file .env.docker \
-  -p 3000:3000 \
-  node-backend:latest
+# Start without rebuilding (uses cached image)
+docker compose -f docker-compose.local.yml up -d
 
+# View logs
+docker compose -f docker-compose.local.yml logs -f backend
+
+# Stop everything
+docker compose -f docker-compose.local.yml down
+
+# Stop and delete all data (fresh start)
+docker compose -f docker-compose.local.yml down -v
+```
+
+---
+
+## Docker - Production
+
+Uses `docker-compose.prod.yml` — pulls a pre-built image from a registry. All env variables come from `.env.prod`.
+
+```bash
+# 1. Copy and fill in production secrets
+cp .env.prod.example .env.prod
+
+# 2. Start everything
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f backend
+
+# Stop everything
+docker compose -f docker-compose.prod.yml down
+```
+
+---
+
+## Docker - Common
+
+```bash
 # Check container status
 docker ps
 
-# Check container health
-docker inspect node-backend --format='{{.State.Health.Status}}'
+# Check backend health
+docker inspect node_backend --format='{{.State.Health.Status}}'
 
-# View container logs
-docker logs node-backend
-docker logs -f node-backend  # follow mode
-
-# Stop and remove
-docker stop node-backend && docker rm node-backend
+# View backend logs
+docker logs node_backend
+docker logs -f node_backend  # follow mode
 ```
 
-> **Why two `.env` files?**
-> - `.env` is for local development (`bun run dev`). It uses `localhost:5433` because your code runs on the host machine.
-> - `.env.docker` is for Docker. It uses `node_postgres:5432` because inside a container, `localhost` refers to the container itself — not your host. The container name (`node_postgres`) lets Docker route traffic to the PostgreSQL container over the shared network (`backend_default`).
+> **Why different compose files?**
+> - `docker-compose.yml` — PostgreSQL only, for local dev with `bun run dev`
+> - `docker-compose.local.yml` — builds backend from Dockerfile + PostgreSQL, reads `.env.docker`
+> - `docker-compose.prod.yml` — pulls pre-built image + PostgreSQL, reads `.env.prod`
+>
+> **Why different `.env` files?**
+> - `.env` — for `bun run dev`, uses `localhost:5433`
+> - `.env.docker` — for local Docker, uses `node_postgres:5432`
+> - `.env.prod` — for production, real secrets + registry image URL
 
 ---
 
