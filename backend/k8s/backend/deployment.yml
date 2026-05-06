@@ -1,0 +1,76 @@
+# Deployment = "I want N copies of this container running at all times"
+# WHY: if a pod crashes, Deployment automatically creates a new one
+# HOW ROLLING UPDATES WORK:
+#   When you change the image tag (e.g., v1.0.6 → v1.0.7):
+#   1. K8s creates a NEW pod with the new image
+#   2. Waits for it to pass health checks
+#   3. Kills an OLD pod
+#   4. Repeats until all pods are on the new version
+#   → Zero downtime deployment
+#
+# HOW PODS TALK TO EACH OTHER:
+#   Pods use Service DNS names, not IPs (IPs change on restart)
+#   Example: postgres-svc.node-app.svc.cluster.local:5432
+#   The Service load-balances to healthy pods behind it
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: node-app
+  labels:
+    app: backend
+spec:
+  # Start with 2 replicas — HPA will scale this between 2 and 10
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  # Rolling update strategy — zero downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0        # never kill a pod before new one is ready
+      maxSurge: 1              # create 1 extra pod during update
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: verma2904/node-backend:latest
+          ports:
+            - containerPort: 3000
+          # Inject non-sensitive env vars from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: backend-config
+            # Inject sensitive env vars from Secret
+            - secretRef:
+                name: backend-secrets
+          # Readiness probe: "is this pod ready to receive traffic?"
+          # K8s won't send traffic until this passes
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          # Liveness probe: "is this pod still alive?"
+          # If this fails, K8s kills and restarts the pod
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          # Resource limits — important for HPA and cluster stability
+          # requests = guaranteed minimum (scheduler uses this to place pods)
+          # limits = maximum allowed (pod gets OOM-killed if it exceeds memory)
+          resources:
+            requests:
+              cpu: 100m        # 0.1 CPU core
+              memory: 128Mi    # 128 MB RAM
+            limits:
+              cpu: 500m        # 0.5 CPU core
+              memory: 512Mi    # 512 MB RAM

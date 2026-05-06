@@ -1,0 +1,17 @@
+# ClusterIP service — only reachable inside the cluster
+# Backend connects via: postgres-svc.node-app.svc.cluster.local:5432
+# (or just postgres-svc:5432 from within the same namespace)
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-svc
+  namespace: node-app
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432

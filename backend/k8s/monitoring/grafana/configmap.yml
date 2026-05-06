@@ -1,0 +1,41 @@
+# Grafana datasource provisioning
+# WHY: auto-configures Prometheus + Loki as data sources on first boot
+# so you don't have to manually add them in the UI
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: node-app
+data:
+  datasource.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-svc:9090
+        isDefault: true
+        editable: false
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        url: http://loki-svc:3100
+        editable: false
+
+---
+# Dashboard provisioning — tells Grafana where to find dashboard JSON files
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: node-app
+data:
+  dashboard.yml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        folder: ""
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards

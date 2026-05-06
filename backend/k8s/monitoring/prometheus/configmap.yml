@@ -1,0 +1,18 @@
+# Prometheus config — tells it where to scrape metrics from
+# WHY as ConfigMap: so we can change scrape targets without rebuilding the image
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: node-app
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+
+    scrape_configs:
+      - job_name: "node-backend"
+        # Uses K8s DNS to find the backend service
+        # Prometheus scrapes GET /metrics on each target
+        static_configs:
+          - targets: ["backend-svc:3000"]

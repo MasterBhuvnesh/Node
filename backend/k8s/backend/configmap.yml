@@ -1,0 +1,16 @@
+# ConfigMap = non-sensitive configuration injected as env vars into pods
+# WHY: keeps config separate from the Docker image
+# so the same image works in dev, staging, prod — only the ConfigMap changes
+# WHAT YOU CAN ACCESS: all these become env vars inside the container
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: node-app
+data:
+  PORT: "3000"
+  NODE_ENV: "production"
+  SMTP_PORT: "587"
+  # Loki URL points to the Loki service inside the cluster
+  # K8s DNS: <service-name>.<namespace>.svc.cluster.local
+  LOKI_URL: "http://loki-svc.node-app.svc.cluster.local:3100"

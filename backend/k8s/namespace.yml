@@ -1,0 +1,7 @@
+# Namespace = isolated environment for all our resources
+# Everything we create goes inside this namespace
+# Keeps our stuff separate from system pods and other apps
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: node-app

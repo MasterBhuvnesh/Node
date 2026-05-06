@@ -301,3 +301,123 @@ curl http://localhost:3000/groups \
 | `EMAIL_FROM`       | Yes      | From field in emails                 |
 | `PORT`             | No       | Server port (default: 3000)          |
 | `NODE_ENV`         | No       | `development` / `production` / `test`|
+
+---
+
+## Kubernetes (Minikube)
+
+### Prerequisites
+
+```bash
+# Install minikube and kubectl
+# Start minikube
+minikube start
+
+# Enable metrics-server (required for HPA autoscaling)
+minikube addons enable metrics-server
+```
+
+### Deploy Everything
+
+```bash
+# From the backend/ directory
+bash k8s/deploy.sh
+```
+
+This creates:
+- **Namespace** `node-app` — isolates all resources
+- **PostgreSQL** with persistent storage
+- **Backend** (2 replicas) with auto-scaling (2→10 pods)
+- **Prometheus** scraping backend /metrics
+- **Loki** receiving logs from winston-loki
+- **Grafana** with pre-configured datasources
+
+### Access URLs
+
+```bash
+# Get your Minikube IP
+minikube ip
+
+# Then access:
+# Backend API:   http://<minikube-ip>:30080
+# Prometheus:    http://<minikube-ip>:30090
+# Grafana:       http://<minikube-ip>:30030  (admin/admin)
+```
+
+### Common Commands
+
+```bash
+# See all pods
+kubectl get pods -n node-app
+
+# See all services
+kubectl get svc -n node-app
+
+# Tail backend logs
+kubectl logs -f -l app=backend -n node-app
+
+# Check autoscaler status
+kubectl get hpa -n node-app
+
+# Resource usage per pod
+kubectl top pods -n node-app
+
+# Push Prisma schema (first deploy)
+kubectl exec -it deploy/backend -n node-app -- bunx prisma db push
+
+# Open a shell inside a backend pod
+kubectl exec -it deploy/backend -n node-app -- sh
+```
+
+### Update Backend Image
+
+```bash
+# After pushing a new Docker image:
+docker build -t verma2904/node-backend:v1.0.7 .
+docker push verma2904/node-backend:v1.0.7
+
+# Tell K8s to use the new image (triggers rolling update):
+kubectl set image deploy/backend backend=verma2904/node-backend:v1.0.7 -n node-app
+
+# Watch the rolling update:
+kubectl rollout status deploy/backend -n node-app
+```
+
+### Tear Down
+
+```bash
+bash k8s/destroy.sh
+```
+
+### File Structure
+
+```
+k8s/
+├── namespace.yml                        # Isolated environment
+├── deploy.sh                            # One-command deploy
+├── destroy.sh                           # One-command teardown
+├── backend/
+│   ├── configmap.yml                    # Non-sensitive env vars
+│   ├── secret.yml                       # Passwords, JWT keys (base64)
+│   ├── deployment.yml                   # 2 replicas, rolling updates, health checks
+│   ├── service.yml                      # NodePort :30080
+│   └── hpa.yml                          # Auto-scale 2→10 on CPU/memory
+├── postgres/
+│   ├── secret.yml                       # DB credentials
+│   ├── pvc.yml                          # Persistent storage (5Gi)
+│   ├── deployment.yml                   # Single replica
+│   └── service.yml                      # ClusterIP (internal only)
+└── monitoring/
+    ├── prometheus/
+    │   ├── configmap.yml                # Scrape config
+    │   ├── deployment.yml               # Metrics collector
+    │   └── service.yml                  # NodePort :30090
+    ├── loki/
+    │   ├── configmap.yml                # Loki config
+    │   ├── deployment.yml               # Log aggregator
+    │   └── service.yml                  # ClusterIP (internal)
+    └── grafana/
+        ├── configmap.yml                # Datasource provisioning
+        ├── deployment.yml               # Dashboard UI
+        └── service.yml                  # NodePort :30030
+```

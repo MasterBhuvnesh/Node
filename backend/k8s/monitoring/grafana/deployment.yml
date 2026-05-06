@@ -1,0 +1,52 @@
+# Grafana = dashboards and visualization
+# WHAT IT DOES: connects to Prometheus (for metrics) and Loki (for logs),
+# displays everything in pre-built dashboards
+# WHAT YOU CAN ACCESS: http://(minikube ip):30030
+#   → Login with admin / admin
+#   → Pre-configured dashboards for request rate, latency, errors, logs
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: node-app
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider

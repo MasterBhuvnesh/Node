@@ -1,0 +1,39 @@
+# HPA = Horizontal Pod Autoscaler
+# WHY: automatically scales pods based on resource usage
+# HOW:
+#   1. HPA checks metrics every 15 seconds (default)
+#   2. If avg CPU across all pods > 70%, it adds pods (up to maxReplicas)
+#   3. If avg CPU drops below 70%, it removes pods (down to minReplicas)
+#   4. Same logic for memory
+#
+# EXAMPLE: if 2 pods are at 90% CPU, HPA creates a 3rd pod
+#          traffic spreads across 3 pods, each drops to ~60% CPU
+#          HPA stops scaling because 60% < 70% target
+#
+# ⚠️  Requires metrics-server running in the cluster
+# For Minikube: minikube addons enable metrics-server
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+  namespace: node-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

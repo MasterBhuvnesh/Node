@@ -1,0 +1,15 @@
+# PersistentVolumeClaim = request for storage that survives pod restarts
+# WHY: without this, database data is lost when the pod restarts
+# The PVC asks the cluster "give me 5GB of disk" and K8s provisions it
+# In Minikube: uses local disk. In EKS: uses EBS volumes
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: node-app
+spec:
+  accessModes:
+    - ReadWriteOnce     # only one pod can mount this at a time
+  resources:
+    requests:
+      storage: 5Gi

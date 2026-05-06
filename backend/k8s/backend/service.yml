@@ -1,0 +1,28 @@
+# Service = stable network endpoint that load-balances across pods
+# WHY: pods get random IPs that change on restart — Services give a fixed DNS name
+# HOW: any request to backend-svc:3000 gets routed to a healthy pod
+#
+# Service types:
+#   ClusterIP  (default) — only reachable inside the cluster
+#   NodePort   — exposes on every node's IP at a static port (30000-32767)
+#   LoadBalancer — creates a cloud load balancer (ALB on AWS)
+#
+# We use NodePort for Minikube (so you can access from your machine)
+# In real EKS, you'd use LoadBalancer or Ingress
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: node-app
+  labels:
+    app: backend
+spec:
+  type: NodePort
+  selector:
+    # Routes traffic to all pods with label app=backend
+    app: backend
+  ports:
+    - port: 3000           # port inside the cluster
+      targetPort: 3000     # port on the container
+      nodePort: 30080      # port on your machine (minikube ip):30080
+      protocol: TCP

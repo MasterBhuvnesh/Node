@@ -1,0 +1,16 @@
+# ClusterIP — Loki only needs to be reachable inside the cluster
+# Backend pushes logs here, Grafana queries logs from here
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-svc
+  namespace: node-app
+  labels:
+    app: loki
+spec:
+  type: ClusterIP
+  selector:
+    app: loki
+  ports:
+    - port: 3100
+      targetPort: 3100
