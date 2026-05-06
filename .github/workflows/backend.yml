@@ -105,8 +105,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_USERNAME }}/node-backend
+          short-description: "Node.js backend API - Express, Prisma, PostgreSQL, JWT auth, Prometheus metrics"
+          readme-filepath: ./backend/docs/dockerfile-metadata.md
+
       - name: Print image info
         run: |
           echo "Docker image pushed:"
           echo "  - ${{ secrets.DOCKER_USERNAME }}/node-backend:latest"
           echo "  - ${{ secrets.DOCKER_USERNAME }}/node-backend:${{ steps.version.outputs.VERSION }}"
+          echo ""
+          echo "Docker Hub description updated from docs/dockerfile-metadata.md"
