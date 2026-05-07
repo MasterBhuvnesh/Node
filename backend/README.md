@@ -6,19 +6,19 @@ Built with **Bun**, **Express 5**, **Prisma**, and **PostgreSQL**.
 
 ## Tech Stack
 
-| Layer         | Technology                            |
-|---------------|---------------------------------------|
-| Runtime       | Bun                                   |
-| Framework     | Express 5                             |
-| Database      | PostgreSQL 16 + Prisma ORM            |
-| Auth          | JWT (access + refresh tokens), OTP    |
-| Validation    | Zod                                   |
-| Email         | Nodemailer (SMTP)                     |
-| Monitoring    | Prometheus + Grafana + Loki           |
-| Logging       | Winston + winston-loki                |
-| Security      | Helmet, CORS, bcrypt, rate limiting   |
-| Testing       | Vitest + Supertest                    |
-| Container     | Docker (multi-stage), Kubernetes      |
+| Layer      | Technology                          |
+| ---------- | ----------------------------------- |
+| Runtime    | Bun                                 |
+| Framework  | Express 5                           |
+| Database   | PostgreSQL 16 + Prisma ORM          |
+| Auth       | JWT (access + refresh tokens), OTP  |
+| Validation | Zod                                 |
+| Email      | Nodemailer (SMTP)                   |
+| Monitoring | Prometheus + Grafana + Loki         |
+| Logging    | Winston + winston-loki              |
+| Security   | Helmet, CORS, bcrypt, rate limiting |
+| Testing    | Vitest + Supertest                  |
+| Container  | Docker (multi-stage), Kubernetes    |
 
 ## Features
 
@@ -55,27 +55,27 @@ API available at `http://localhost:3000`
 
 ### Auth (public)
 
-| Method | Endpoint               | Body                           |
-|--------|------------------------|--------------------------------|
-| POST   | `/auth/signup`         | `{ name, email, password }`    |
-| POST   | `/auth/login`          | `{ email, password }`          |
-| POST   | `/auth/verify-otp`     | `{ email, code }`              |
-| POST   | `/auth/refresh-token`  | `{ refreshToken }`             |
-| POST   | `/auth/forgot-password`| `{ email }`                    |
-| POST   | `/auth/reset-password` | `{ email, code, newPassword }` |
-| POST   | `/auth/logout`         | `{ refreshToken }`             |
+| Method | Endpoint                | Body                           |
+| ------ | ----------------------- | ------------------------------ |
+| POST   | `/auth/signup`          | `{ name, email, password }`    |
+| POST   | `/auth/login`           | `{ email, password }`          |
+| POST   | `/auth/verify-otp`      | `{ email, code }`              |
+| POST   | `/auth/refresh-token`   | `{ refreshToken }`             |
+| POST   | `/auth/forgot-password` | `{ email }`                    |
+| POST   | `/auth/reset-password`  | `{ email, code, newPassword }` |
+| POST   | `/auth/logout`          | `{ refreshToken }`             |
 
 ### Users (authenticated)
 
 | Method | Endpoint    | Body       |
-|--------|-------------|------------|
+| ------ | ----------- | ---------- |
 | GET    | `/users/me` | -          |
 | PUT    | `/users/me` | `{ name }` |
 
 ### Groups (authenticated)
 
 | Method | Endpoint      | Body       | Permission   |
-|--------|---------------|------------|--------------|
+| ------ | ------------- | ---------- | ------------ |
 | GET    | `/groups`     | -          | Any member   |
 | POST   | `/groups`     | `{ name }` | Any user     |
 | GET    | `/groups/:id` | -          | Group member |
@@ -84,40 +84,40 @@ API available at `http://localhost:3000`
 
 ### Members (authenticated)
 
-| Method | Endpoint                           | Body         | Permission   |
-|--------|------------------------------------|--------------|--------------|
-| POST   | `/groups/:id/members`              | `{ email }`  | Owner/Leader |
-| DELETE | `/groups/:id/members/:userId`      | -            | Owner/Leader |
-| PUT    | `/groups/:id/members/:userId/role` | `{ role }`   | Owner only   |
+| Method | Endpoint                           | Body        | Permission   |
+| ------ | ---------------------------------- | ----------- | ------------ |
+| POST   | `/groups/:id/members`              | `{ email }` | Owner/Leader |
+| DELETE | `/groups/:id/members/:userId`      | -           | Owner/Leader |
+| PUT    | `/groups/:id/members/:userId/role` | `{ role }`  | Owner only   |
 
 ### Logs (authenticated)
 
-| Method | Endpoint           | Query Params         | Permission   |
-|--------|--------------------|----------------------|--------------|
-| GET    | `/groups/:id/logs` | `?cursor=X&take=20`  | Group member |
+| Method | Endpoint           | Query Params        | Permission   |
+| ------ | ------------------ | ------------------- | ------------ |
+| GET    | `/groups/:id/logs` | `?cursor=X&take=20` | Group member |
 
 ### Health / Metrics
 
-| Method | Endpoint   | Description          |
-|--------|------------|----------------------|
-| GET    | `/health`  | Health check         |
-| GET    | `/metrics` | Prometheus metrics   |
+| Method | Endpoint   | Description        |
+| ------ | ---------- | ------------------ |
+| GET    | `/health`  | Health check       |
+| GET    | `/metrics` | Prometheus metrics |
 
 ## Environment Variables
 
-| Variable             | Required | Default         | Description                |
-|----------------------|----------|-----------------|----------------------------|
-| `DATABASE_URL`       | Yes      | -               | PostgreSQL connection URL   |
-| `JWT_SECRET`         | Yes      | -               | Access token signing key   |
-| `JWT_REFRESH_SECRET` | Yes      | -               | Refresh token signing key  |
-| `SMTP_HOST`          | Yes      | `smtp.gmail.com`| SMTP server host           |
-| `SMTP_PORT`          | No       | `587`           | SMTP server port           |
-| `SMTP_USER`          | Yes      | -               | SMTP sender email          |
-| `SMTP_PASSWORD`      | Yes      | -               | SMTP app password          |
-| `EMAIL_FROM`         | Yes      | -               | Email "From" field         |
-| `PORT`               | No       | `3000`          | Server port                |
-| `NODE_ENV`           | No       | `development`   | Environment mode           |
-| `LOKI_URL`           | No       | -               | Loki push endpoint         |
+| Variable             | Required | Default          | Description               |
+| -------------------- | -------- | ---------------- | ------------------------- |
+| `DATABASE_URL`       | Yes      | -                | PostgreSQL connection URL |
+| `JWT_SECRET`         | Yes      | -                | Access token signing key  |
+| `JWT_REFRESH_SECRET` | Yes      | -                | Refresh token signing key |
+| `SMTP_HOST`          | Yes      | `smtp.gmail.com` | SMTP server host          |
+| `SMTP_PORT`          | No       | `587`            | SMTP server port          |
+| `SMTP_USER`          | Yes      | -                | SMTP sender email         |
+| `SMTP_PASSWORD`      | Yes      | -                | SMTP app password         |
+| `EMAIL_FROM`         | Yes      | -                | Email "From" field        |
+| `PORT`               | No       | `3000`           | Server port               |
+| `NODE_ENV`           | No       | `development`    | Environment mode          |
+| `LOKI_URL`           | No       | -                | Loki push endpoint        |
 
 ## Scripts
 
@@ -147,11 +147,11 @@ docker compose -f docker-compose.local.yml up -d --build
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 ```
 
-| Compose File               | Use Case                        |
-|----------------------------|---------------------------------|
-| `docker-compose.yml`       | PostgreSQL only for local dev   |
-| `docker-compose.local.yml` | Full stack with local build     |
-| `docker-compose.prod.yml`  | Production with registry image  |
+| Compose File               | Use Case                       |
+| -------------------------- | ------------------------------ |
+| `docker-compose.yml`       | PostgreSQL only for local dev  |
+| `docker-compose.local.yml` | Full stack with local build    |
+| `docker-compose.prod.yml`  | Production with registry image |
 
 ## Kubernetes (Minikube)
 
@@ -180,7 +180,7 @@ minikube service grafana-svc -n node-app
 ### Services
 
 | Service    | NodePort | Credentials |
-|------------|----------|-------------|
+| ---------- | -------- | ----------- |
 | Backend    | 30080    | -           |
 | Prometheus | 30090    | -           |
 | Grafana    | 30030    | admin/admin |
@@ -236,8 +236,8 @@ bun run release:major    # major: 1.0.6 → 2.0.0
 
 ### Pipeline Triggers
 
-| Trigger               | Action                              |
-|-----------------------|-------------------------------------|
+| Trigger               | Action                             |
+| --------------------- | ---------------------------------- |
 | `backend-v*` tag push | Full pipeline: test → build → push |
 
 ## Production Infrastructure (AWS)
@@ -247,33 +247,33 @@ Production runs on AWS, provisioned entirely via **Terraform** (Infrastructure a
 ### Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                        AWS Cloud                         │
-│                                                         │
-│  ┌─────────────┐    ┌──────────────┐    ┌───────────┐  │
-│  │     ECR     │    │     EKS      │    │    RDS    │  │
-│  │  (Docker    │───▶│  (Kubernetes │───▶│(PostgreSQL)│  │
-│  │   Registry) │    │   Cluster)   │    │           │  │
-│  └─────────────┘    └──────────────┘    └───────────┘  │
-│                            │                            │
-│                            ▼                            │
-│                     ┌─────────────┐                     │
-│                     │   Kinesis   │                     │
-│                     │  (Secrets   │                     │
-│                     │  Management)│                     │
-│                     └─────────────┘                     │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│                          AWS Cloud                         │
+│                                                            │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
+│  │     ECR      │    │     EKS      │    │    RDS       │  │
+│  │  (Docker     │────│  (Kubernetes │────│(PostgreSQL)  │  │
+│  │   Registry)  │    │   Cluster)   │    │              │  │
+│  └──────────────┘    └──────────────┘    └──────────────┘  │
+│                            │                               │
+│                            ▼                               │
+│                     ┌─────────────┐                        │
+│                     │   Kinesis   │                        │
+│                     │  (Secrets   │                        │
+│                     │  Management)│                        │
+│                     └─────────────┘                        │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### AWS Services
 
-| Service                        | Purpose                                      |
-|--------------------------------|----------------------------------------------|
-| **EKS** (Elastic Kubernetes)   | Production Kubernetes cluster                |
-| **ECR** (Container Registry)   | Private Docker image storage                 |
-| **RDS** (PostgreSQL)           | Managed database with backups and failover   |
-| **Kinesis / Secrets Manager**  | Secure credential and secret management      |
-| **Terraform**                  | Infrastructure as Code — all resources versioned |
+| Service                       | Purpose                                          |
+| ----------------------------- | ------------------------------------------------ |
+| **EKS** (Elastic Kubernetes)  | Production Kubernetes cluster                    |
+| **ECR** (Container Registry)  | Private Docker image storage                     |
+| **RDS** (PostgreSQL)          | Managed database with backups and failover       |
+| **Kinesis / Secrets Manager** | Secure credential and secret management          |
+| **Terraform**                 | Infrastructure as Code — all resources versioned |
 
 ### How It Works
 
@@ -286,10 +286,10 @@ Production runs on AWS, provisioned entirely via **Terraform** (Infrastructure a
 ### Dev vs Production
 
 | Concern         | Local (Minikube)         | Production (AWS)              |
-|-----------------|--------------------------|-------------------------------|
+| --------------- | ------------------------ | ----------------------------- |
 | K8s Cluster     | Minikube                 | EKS                           |
 | Docker Registry | Docker Hub               | ECR                           |
-| Database        | PostgreSQL in pod        | RDS (managed, multi-AZ)      |
+| Database        | PostgreSQL in pod        | RDS (managed, multi-AZ)       |
 | Secrets         | K8s Secrets (base64)     | AWS Secrets Manager / Kinesis |
 | Scaling         | HPA (2-10 pods)          | HPA + cluster autoscaler      |
 | Monitoring      | Prometheus + Grafana pod | CloudWatch + Prometheus       |
@@ -298,7 +298,7 @@ Production runs on AWS, provisioned entirely via **Terraform** (Infrastructure a
 ## Monitoring
 
 | Metric                        | Source     |
-|-------------------------------|------------|
+| ----------------------------- | ---------- |
 | Request rate by route/method  | Prometheus |
 | Response time (p50/p95/p99)   | Prometheus |
 | Error rate (4xx/5xx)          | Prometheus |
