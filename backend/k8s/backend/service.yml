@@ -16,14 +16,26 @@ metadata:
   namespace: node-app
   labels:
     app: backend
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:ap-south-1:381491923704:certificate/eac16612-65cc-46a8-86f3-13ce79c4dcd4"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
 spec:
-  # type: NodePort
   type: LoadBalancer
   selector:
-    # Routes traffic to all pods with label app=backend
     app: backend
   ports:
-    - port: 3000           # port inside the cluster
-      targetPort: 3000     # port on the container
-      nodePort: 30080      # port on your machine (minikube ip):30080
+    - name: https
+      port: 443
+      targetPort: 3000
       protocol: TCP
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+    # Minikube: use minikube service backend-svc -n node-app
+    # - name: local
+    #   port: 3000
+    #   targetPort: 3000
+    #   nodePort: 30080
+    #   protocol: TCP

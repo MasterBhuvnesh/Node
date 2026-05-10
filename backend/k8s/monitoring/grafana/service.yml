@@ -1,5 +1,4 @@
-# NodePort so you can access Grafana from your browser
-# Access: http://(minikube ip):30030
+# Grafana dashboard UI
 # Login: admin / admin
 apiVersion: v1
 kind: Service
@@ -8,12 +7,26 @@ metadata:
   namespace: node-app
   labels:
     app: grafana
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:ap-south-1:381491923704:certificate/0aed8009-e7ef-47b1-a517-e97672dd9a5e"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
 spec:
-  # type: NodePort
   type: LoadBalancer
   selector:
     app: grafana
   ports:
-    - port: 3000
+    - name: https
+      port: 443
       targetPort: 3000
-      nodePort: 30030
+      protocol: TCP
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+    # Minikube: use minikube service grafana-svc -n node-app
+    # - name: local
+    #   port: 3000
+    #   targetPort: 3000
+    #   nodePort: 30030
+    #   protocol: TCP
