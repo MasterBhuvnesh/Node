@@ -31,6 +31,10 @@ spec:
               value: "admin"
             - name: GF_SECURITY_ADMIN_PASSWORD
               value: "admin"
+            - name: GF_SERVER_ROOT_URL
+              value: "https://dashboard.gdgrbu.dev"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "false"
           volumeMounts:
             - name: datasources
               mountPath: /etc/grafana/provisioning/datasources

@@ -6,16 +6,16 @@ Terraform provisions all the AWS infrastructure needed to run the backend in pro
 
 ## When do you run Terraform?
 
-| Scenario | Run Terraform? |
-|----------|---------------|
-| First time setting up production | Yes — `terraform apply` |
-| Deploying a new code version | No — use `kubectl set image` |
-| Changing environment variables | No — use `kubectl create secret` |
-| Scaling pods (2 → 5) | No — HPA handles it automatically |
-| Adding a new subdomain | Yes — add to `route53.tf` |
-| Upgrading Kubernetes version | Yes — change `cluster_version` |
-| Changing DB instance size | Yes — change `db_instance_class` |
-| Adding a new AWS service | Yes — add new `.tf` file |
+| Scenario                         | Run Terraform?                    |
+| -------------------------------- | --------------------------------- |
+| First time setting up production | Yes — `terraform apply`           |
+| Deploying a new code version     | No — use `kubectl set image`      |
+| Changing environment variables   | No — use `kubectl create secret`  |
+| Scaling pods (2 → 5)             | No — HPA handles it automatically |
+| Adding a new subdomain           | Yes — add to `route53.tf`         |
+| Upgrading Kubernetes version     | Yes — change `cluster_version`    |
+| Changing DB instance size        | Yes — change `db_instance_class`  |
+| Adding a new AWS service         | Yes — add new `.tf` file          |
 
 **Rule of thumb:** Terraform manages AWS resources (the "where"). Kubernetes manifests manage your app (the "what runs").
 
@@ -24,35 +24,35 @@ Terraform provisions all the AWS infrastructure needed to run the backend in pro
 ## What Terraform creates
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                         AWS Account                              │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
+│  ┌──────────────────────────────────────────────────────────┐    │
 │  │                    VPC (10.0.0.0/16)                     │    │
 │  │                                                          │    │
-│  │  ┌──────────────┐         ┌──────────────────────────┐  │    │
+│  │  ┌──────────────┐         ┌───────────────────────────┐  │    │
 │  │  │Public Subnets│         │    Private Subnets        │  │    │
-│  │  │  (2x AZs)   │         │      (2x AZs)            │  │    │
-│  │  │             │         │                           │  │    │
-│  │  │  Internet   │   NAT   │  ┌─────┐    ┌─────────┐  │  │    │
-│  │  │  Gateway    │───────▶ │  │ EKS │    │   RDS   │  │  │    │
-│  │  │             │         │  │Nodes│    │PostgreSQL│  │  │    │
-│  │  └──────────────┘         │  └─────┘    └─────────┘  │  │    │
-│  │                           └──────────────────────────┘  │    │
-│  └─────────────────────────────────────────────────────────┘    │
+│  │  │  (2x AZs)    │         │      (2x AZs)             │  │    │
+│  │  │              │         │                           │  │    │
+│  │  │  Internet    │   NAT   │  ┌─────┐    ┌──────────┐  │  │    │
+│  │  │  Gateway     │───────  │  │ EKS │    │   RDS    │  │  │    │
+│  │  │              │         │  │Nodes│    │PostgreSQL│  │  │    │
+│  │  └──────────────┘         │  └─────┘    └──────────┘  │  │    │
+│  │                           └───────────────────────────┘  │    │
+│  └──────────────────────────────────────────────────────────┘    │
 │                                                                  │
-│  ┌────────────┐  ┌─────────────┐  ┌───────────────────────┐    │
-│  │    EKS     │  │     ACM     │  │   Secrets Manager     │    │
-│  │  Cluster   │  │ SSL Certs   │  │  JWT, SMTP creds      │    │
-│  │  + Addons  │  │ (auto DNS)  │  │                       │    │
-│  └────────────┘  └─────────────┘  └───────────────────────┘    │
+│  ┌────────────┐  ┌─────────────┐  ┌───────────────────────┐      │
+│  │    EKS     │  │     ACM     │  │   Secrets Manager     │      │
+│  │  Cluster   │  │ SSL Certs   │  │  JWT, SMTP creds      │      │
+│  │  + Addons  │  │ (auto DNS)  │  │                       │      │
+│  └────────────┘  └─────────────┘  └───────────────────────┘      │
 │                                                                  │
-│  ┌────────────────────────────────┐                             │
-│  │          Route 53              │                             │
-│  │  node.gdgrbu.dev → Backend LB  │                             │
+│  ┌─────────────────────────────────┐                             │
+│  │          Route 53               │                             │
+│  │  node.gdgrbu.dev → Backend LB   │                             │
 │  │  dashboard.gdgrbu.dev → Grafana │                             │
-│  └────────────────────────────────┘                             │
-└─────────────────────────────────────────────────────────────────┘
+│  └─────────────────────────────────┘                             │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -191,6 +191,7 @@ terraform apply    # apply changes
 ```
 
 Examples:
+
 - Upgrade K8s version: change `cluster_version` in `terraform.tfvars`
 - Scale DB: change `db_instance_class` to `db.t3.small`
 - Add new subdomain: add a new `aws_acm_certificate` in `route53.tf`
@@ -200,10 +201,10 @@ Examples:
 ## Terraform vs kubectl — who does what?
 
 ```
-                    ┌──────────────────────────────────┐
+                    ┌───────────────────────────────────┐
                     │        terraform apply            │
                     │     (run once at project start)   │
-                    └──────────────┬───────────────────┘
+                    └──────────────┬────────────────────┘
                                    │ creates
                                    ▼
               ┌─────────────────────────────────────────┐
@@ -212,10 +213,10 @@ Examples:
                                    │
                                    │ then
                                    ▼
-                    ┌──────────────────────────────────┐
+                    ┌───────────────────────────────────┐
                     │      bash k8s/deploy.sh           │
                     │   (run once after infra is up)    │
-                    └──────────────┬───────────────────┘
+                    └──────────────┬────────────────────┘
                                    │ creates
                                    ▼
               ┌─────────────────────────────────────────┐
@@ -224,10 +225,10 @@ Examples:
                                    │
                                    │ then daily workflow
                                    ▼
-                    ┌──────────────────────────────────┐
+                    ┌───────────────────────────────────┐
                     │   kubectl set image / rollout     │
                     │   (every time you deploy code)    │
-                    └──────────────────────────────────┘
+                    └───────────────────────────────────┘
 ```
 
 ---
@@ -245,20 +246,21 @@ This removes: EKS cluster, nodes, RDS database, VPC, certificates — everything
 
 ## Cost estimate (production)
 
-| Resource | Monthly cost |
-|----------|-------------|
-| EKS control plane | ~$73 |
-| 2x t3.small nodes | ~$30 |
-| RDS db.t3.micro | ~$15 |
-| NAT Gateway | ~$32 |
-| 3x Load Balancers | ~$54 |
-| EBS storage (5Gi) | ~$0.50 |
-| Route 53 hosted zone | ~$0.50 |
-| ACM certificates | Free |
-| Secrets Manager | ~$1 |
-| **Total** | **~$206/month** |
+| Resource             | Monthly cost    |
+| -------------------- | --------------- |
+| EKS control plane    | ~$73            |
+| 2x t3.small nodes    | ~$30            |
+| RDS db.t3.micro      | ~$15            |
+| NAT Gateway          | ~$32            |
+| 3x Load Balancers    | ~$54            |
+| EBS storage (5Gi)    | ~$0.50          |
+| Route 53 hosted zone | ~$0.50          |
+| ACM certificates     | Free            |
+| Secrets Manager      | ~$1             |
+| **Total**            | **~$206/month** |
 
 To reduce cost for testing:
+
 - Use 1 node instead of 2
 - Skip NAT gateway (put nodes in public subnets)
 - Use `db.t3.micro` with single-AZ
