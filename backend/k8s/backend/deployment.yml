@@ -29,8 +29,8 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0        # never kill a pod before new one is ready
-      maxSurge: 1              # create 1 extra pod during update
+      maxUnavailable: 1        # kill 1 old pod before creating new one (avoids needing extra capacity)
+      maxSurge: 0              # don't create extra pods beyond desired count
   template:
     metadata:
       labels:
