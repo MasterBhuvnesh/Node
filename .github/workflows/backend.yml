@@ -142,7 +142,16 @@ jobs:
           kubectl set image deploy/backend \
             backend=${{ secrets.DOCKER_USERNAME }}/node-backend:${{ needs.build.outputs.version }} \
             -n node-app
-          kubectl rollout status deploy/backend -n node-app --timeout=300s
+          kubectl rollout status deploy/backend -n node-app --timeout=600s
+
+      - name: Verify deployment
+        if: always()
+        run: |
+          echo "Current pods:"
+          kubectl get pods -n node-app -l app=backend -o wide
+          echo ""
+          echo "Deployment status:"
+          kubectl get deploy/backend -n node-app
 
       - name: Print deploy info
         run: |
