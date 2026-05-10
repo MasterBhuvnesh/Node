@@ -17,7 +17,8 @@ metadata:
   labels:
     app: backend
 spec:
-  type: NodePort
+  # type: NodePort
+  type: LoadBalancer
   selector:
     # Routes traffic to all pods with label app=backend
     app: backend

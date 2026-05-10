@@ -8,7 +8,8 @@ metadata:
   labels:
     app: prometheus
 spec:
-  type: NodePort
+  # type: NodePort
+  type: LoadBalancer
   selector:
     app: prometheus
   ports:

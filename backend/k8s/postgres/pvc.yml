@@ -8,6 +8,7 @@ metadata:
   name: postgres-pvc
   namespace: node-app
 spec:
+  storageClassName: gp2
   accessModes:
     - ReadWriteOnce     # only one pod can mount this at a time
   resources:
