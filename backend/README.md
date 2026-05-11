@@ -153,9 +153,9 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
 | `docker-compose.local.yml` | Full stack with local build    |
 | `docker-compose.prod.yml`  | Production with registry image |
 
-## Kubernetes (Minikube)
+## Kubernetes
 
-### Deploy
+### Local (Minikube)
 
 ```bash
 minikube start
@@ -200,100 +200,139 @@ kubectl exec -it deploy/backend -n node-app -- bunx prisma db push
 kubectl set image deploy/backend backend=verma2904/node-backend:v1.0.7 -n node-app
 ```
 
+### Production (EKS)
+
+```bash
+# First time: create cluster + install EBS CSI + deploy
+eksctl create cluster --name node-app-cluster --region ap-south-1 --nodes 2 --node-type t3.small --managed
+bash k8s/deploy.sh
+
+# Subsequent deploys: just push a tag
+bun run release
+# CI/CD handles the rest automatically
+```
+
+See [docs/aws-eks.md](docs/aws-eks.md) for full setup guide and troubleshooting.
+
 ### Tear Down
 
 ```bash
+# Minikube
 bash k8s/destroy.sh
+
+# EKS (deletes everything including load balancers and volumes)
+eksctl delete cluster --name node-app-cluster --region ap-south-1
 ```
 
 ## CI/CD Pipeline
 
-Automated deployment via GitHub Actions. The pipeline triggers on version tags (`backend-v*`).
+Fully automated deployment via GitHub Actions. Push a version tag and the pipeline handles everything from testing to production deployment.
 
 ### Workflow
 
 ```
-git tag push → GitHub Actions → Test → Build → Push to Registry → Deploy
+git tag push (backend-v*) → Test → Build Docker Image → Push to Docker Hub → Deploy to EKS
 ```
 
 **Pipeline stages:**
 
-1. **Test** — spins up a PostgreSQL service container, installs deps, generates Prisma client, runs type checking and full test suite
+1. **Test** — spins up PostgreSQL service container, installs deps, generates Prisma client, type checks, runs full test suite
 2. **Build** — builds multi-stage Docker image with Buildx (layer caching via GHA cache)
-3. **Push** — pushes to Docker registry with `latest` + versioned tag (e.g., `v1.0.6`)
+3. **Push** — pushes to Docker Hub with `latest` + versioned tag (e.g., `1.0.12`)
+4. **Deploy** — configures AWS credentials, updates kubeconfig, runs `kubectl set image` for rolling update on EKS
 
 ### Release Process
 
 ```bash
 # Bump version, stage, and get the commit+tag+push command
-bun run release          # patch: 1.0.6 → 1.0.7
-bun run release:minor    # minor: 1.0.6 → 1.1.0
-bun run release:major    # major: 1.0.6 → 2.0.0
+bun run release          # patch: 1.0.11 → 1.0.12
+bun run release:minor    # minor: 1.0.12 → 1.1.0
+bun run release:major    # major: 1.0.12 → 2.0.0
 
 # Run the printed command to commit, tag, and push
-# This triggers the CI/CD pipeline automatically
+# This triggers the full CI/CD pipeline automatically
 ```
 
 ### Pipeline Triggers
 
-| Trigger               | Action                             |
-| --------------------- | ---------------------------------- |
-| `backend-v*` tag push | Full pipeline: test → build → push |
+| Trigger               | Action                                        |
+| --------------------- | --------------------------------------------- |
+| `backend-v*` tag push | Full pipeline: test → build → push → deploy   |
 
 ## Production Infrastructure (AWS)
 
-Production runs on AWS, provisioned entirely via **Terraform** (Infrastructure as Code).
+Production runs on **AWS EKS** (ap-south-1), provisioned via **Terraform** IaC with custom domains on **Route 53**.
 
 ### Architecture
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                          AWS Cloud                         │
-│                                                            │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │     ECR      │    │     EKS      │    │    RDS       │  │
-│  │  (Docker     │────│  (Kubernetes │────│(PostgreSQL)  │  │
-│  │   Registry)  │    │   Cluster)   │    │              │  │
-│  └──────────────┘    └──────────────┘    └──────────────┘  │
-│                            │                               │
-│                            ▼                               │
-│                     ┌─────────────┐                        │
-│                     │   Kinesis   │                        │
-│                     │  (Secrets   │                        │
-│                     │  Management)│                        │
-│                     └─────────────┘                        │
-└────────────────────────────────────────────────────────────┘
+                         ┌─────────────────────────┐
+                         │      Route 53 DNS       │
+                         │  node.gdgrbu.dev        │
+                         │  dashboard.gdgrbu.dev   │
+                         └────────┬────────────────┘
+                                  │ A record (alias)
+                                  ▼
+                    ┌──────────────────────────────┐
+                    │   AWS Classic Load Balancers  │
+                    │   (ACM SSL termination)       │
+                    └──────┬───────────────┬───────┘
+                           │               │
+              :443         │               │    :443
+                           ▼               ▼
+                    ┌─────────────┐  ┌───────────┐
+                    │  Backend    │  │  Grafana  │
+                    │  (2-10 pods)│  │  (1 pod)  │
+                    │  HPA scaled │  └─────┬─────┘
+                    └──────┬──────┘        │
+                           │               ▼
+                           │         ┌───────────┐
+                           ▼         │   Loki    │
+                    ┌─────────────┐  │ Prometheus│
+                    │  PostgreSQL │  └───────────┘
+                    │  (EBS gp2)  │
+                    └─────────────┘
+
+    Cluster: node-app-cluster (2x t3.small)
+    Region: ap-south-1
+    Namespace: node-app
 ```
 
 ### AWS Services
 
-| Service                       | Purpose                                          |
-| ----------------------------- | ------------------------------------------------ |
-| **EKS** (Elastic Kubernetes)  | Production Kubernetes cluster                    |
-| **ECR** (Container Registry)  | Private Docker image storage                     |
-| **RDS** (PostgreSQL)          | Managed database with backups and failover       |
-| **Kinesis / Secrets Manager** | Secure credential and secret management          |
-| **Terraform**                 | Infrastructure as Code — all resources versioned |
+| Service                      | Purpose                                       |
+| ---------------------------- | --------------------------------------------- |
+| **EKS**                      | Managed Kubernetes cluster (2x t3.small)      |
+| **EBS**                      | Persistent volumes for PostgreSQL (gp2)       |
+| **Route 53**                 | DNS routing to Load Balancers                 |
+| **ACM**                      | Free SSL certificates (auto-renewed)          |
+| **Classic Load Balancer**    | SSL termination + traffic routing             |
+| **Secrets Manager**          | JWT keys, SMTP credentials                    |
+| **IAM**                      | Cluster access + CI/CD user permissions       |
+| **Terraform**                | IaC — all resources versioned and reproducible|
 
 ### How It Works
 
-- Docker images are pushed to **ECR** (instead of Docker Hub in dev)
-- **EKS** runs the same Kubernetes manifests as local Minikube (with production values)
-- Database credentials, JWT secrets, and API keys are stored in **AWS Secrets Manager / Kinesis**
-- All infrastructure is defined in Terraform — reproducible, auditable, and version-controlled
-- Rolling updates with zero downtime via EKS deployment strategies
+- Docker images are pushed to **Docker Hub** (`verma2904/node-backend`)
+- **EKS** runs the same K8s manifests as Minikube (with production service configs)
+- SSL termination via **ACM certificates** on Load Balancers
+- Custom domains via **Route 53** (node.gdgrbu.dev → backend, dashboard.gdgrbu.dev → grafana)
+- **GitHub Actions** auto-deploys on tag push via `kubectl set image` (rolling update)
+- Infrastructure defined in `infra/` Terraform — run once at project start
 
 ### Dev vs Production
 
-| Concern         | Local (Minikube)         | Production (AWS)              |
-| --------------- | ------------------------ | ----------------------------- |
-| K8s Cluster     | Minikube                 | EKS                           |
-| Docker Registry | Docker Hub               | ECR                           |
-| Database        | PostgreSQL in pod        | RDS (managed, multi-AZ)       |
-| Secrets         | K8s Secrets (base64)     | AWS Secrets Manager / Kinesis |
-| Scaling         | HPA (2-10 pods)          | HPA + cluster autoscaler      |
-| Monitoring      | Prometheus + Grafana pod | CloudWatch + Prometheus       |
-| TLS             | None                     | ACM + ALB                     |
+| Concern         | Local (Minikube)         | Production (AWS)                   |
+| --------------- | ------------------------ | ---------------------------------- |
+| K8s Cluster     | Minikube                 | EKS (node-app-cluster)             |
+| Docker Registry | Docker Hub               | Docker Hub                         |
+| Database        | PostgreSQL in pod        | PostgreSQL in pod (or RDS)         |
+| Secrets         | K8s Secrets (base64)     | K8s Secrets (created via CLI)      |
+| Scaling         | HPA (2-10 pods)          | HPA (2-10 pods) on 2 nodes        |
+| Monitoring      | Prometheus + Grafana     | Prometheus + Grafana + Loki        |
+| TLS             | None                     | ACM + Classic Load Balancer        |
+| Domain          | localhost:30080           | node.gdgrbu.dev                    |
+| Deploy          | Manual kubectl           | Auto via GitHub Actions on tag     |
 
 ## Monitoring
 
@@ -348,6 +387,16 @@ bun run test:watch
 ```
 
 Tests use Vitest + Supertest for integration testing against a real database.
+
+## Documentation
+
+| Document | Description |
+| -------- | ----------- |
+| [docs/aws-eks.md](docs/aws-eks.md) | AWS EKS manual setup + all errors faced and fixes |
+| [docs/eks-deployment.md](docs/eks-deployment.md) | Step-by-step EKS deployment guide |
+| [docs/terraform.md](docs/terraform.md) | Terraform IaC usage and architecture |
+| [docs/dockerfile-metadata.md](docs/dockerfile-metadata.md) | Docker image description |
+| [docs/commands.md](docs/commands.md) | Useful kubectl/aws commands |
 
 ## License
 
